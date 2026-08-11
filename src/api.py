@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from src.exception_detection import detect_exception
-from src.mock_ai import mock_ai_analysis
+from src.llm_analysis import analyze_shipment_with_ai
 
 
 app = FastAPI(
@@ -46,11 +46,14 @@ def analyze_shipment(shipment: Shipment):
 
 
 @app.post("/ai-analyze")
-def ai_analyze_shipment(shipment: dict):
-    exception_result = detect_exception(shipment)
+def ai_analyze_shipment(shipment: Shipment):
 
-    ai_result = mock_ai_analysis(
-        shipment,
+    shipment_data = shipment.model_dump()
+
+    exception_result = detect_exception(shipment_data)
+
+    ai_result = analyze_shipment_with_ai(
+        shipment_data,
         exception_result
     )
 

@@ -3,8 +3,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from ai_schema import AIShipmentAnalysis
-
+from src.ai_schema import AIShipmentAnalysis
 
 load_dotenv()
 
@@ -21,7 +20,7 @@ def analyze_shipment_with_ai(shipment, exception_result):
     prompt = f"""
 You are an AI logistics operations analyst.
 
-Analyze this shipment exception.
+Analyze the following shipment exception and provide a concise operational assessment.
 
 Shipment:
 - Shipment ID: {shipment["shipment_id"]}
@@ -31,14 +30,18 @@ Shipment:
 - Status: {shipment["status"]}
 - Priority: {shipment["priority"]}
 - Delay: {shipment["delay_hours"]} hours
-- Reason: {shipment["reason"]}
+- Reason: {shipment.get("reason", "Not provided")}
 
 Deterministic analysis:
 - Exception: {exception_result["exception"]}
 - Exception type: {exception_result["exception_type"]}
 - Severity: {exception_result["severity"]}
 
-Provide an operational analysis.
+Determine:
+1. The business impact of the exception.
+2. The most likely root cause based only on the supplied information.
+3. The recommended operational action.
+4. Whether customer communication is required.
 
 Do not invent facts that are not present in the supplied information.
 """

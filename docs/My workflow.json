@@ -1,0 +1,205 @@
+{
+  "name": "AlphaShipment AI - Operations Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c0f9b27e-2d80-4111-ad1c-a0f3dbbd12ca",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e35eef2e-e5e1-4353-9596-99ae4395eeac",
+      "name": "Webhook",
+      "webhookId": "c0f9b27e-2d80-4111-ad1c-a0f3dbbd12ca"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/analyze-shipment",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"shipment_id\": \"{{ $json.body.shipment_id }}\",\n  \"origin\": \"{{ $json.body.origin }}\",\n  \"destination\": \"{{ $json.body.destination }}\",\n  \"carrier\": \"{{ $json.body.carrier }}\",\n  \"shipment_date\": \"{{ $json.body.shipment_date }}\",\n  \"expected_delivery\": \"{{ $json.body.expected_delivery }}\",\n  \"status\": \"{{ $json.body.status }}\",\n  \"priority\": \"{{ $json.body.priority }}\",\n  \"delay_hours\": {{ $json.body.delay_hours }},\n  \"reason\": \"{{ $json.body.reason }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "4571e7e1-afc9-409e-bd67-ffa4a445f81e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3d072873-b378-4170-9c9f-cb568c812e0d",
+              "leftValue": "={{ $json.severity }}",
+              "rightValue": "CRITICAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b49258d5-13a0-4e21-abd2-17dec703728f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const shipmentId = $('Webhook').item.json.body.shipment_id;\n\nreturn {\n  json: {\n    shipment_id: shipmentId,\n    business_impact: $json.business_impact,\n    root_cause_analysis: $json.root_cause_analysis,\n    recommended_action: $json.recommended_action,\n    customer_communication_required: $json.customer_communication_required,\n    escalation_required: true,\n    escalation_type: \"OPERATIONS_ESCALATION\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -112
+      ],
+      "id": "905035e4-9fc5-4aad-9a40-d04c71ecb6d3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fromEmail": "operations@example.com",
+        "toEmail": "operations@example.com",
+        "subject": "=AlphaShipment AI - Critical Shipment Escalation: {{$json.shipment_id}}",
+        "emailFormat": "text",
+        "text": "=ALPHASHIPMENT AI - OPERATIONS ESCALATION\n\nShipment ID:\n{{$json.shipment_id}}\n\nEscalation Type:\n{{$json.escalation_type}}\n\nBusiness Impact:\n{{$json.business_impact}}\n\nRoot Cause Analysis:\n{{$json.root_cause_analysis}}\n\nRecommended Action:\n{{$json.recommended_action}}\n\nCustomer Communication Required:\n{{$json.customer_communication_required}}\n\nThis shipment has been identified as requiring operational escalation by the AlphaShipment AI platform.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "bf6ceb9e-1bc1-4500-9593-9ae638dc50be",
+      "name": "Send an Email"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    shipment_id: $json.shipment_id,\n    severity: $json.severity,\n    escalation_required: false,\n    escalation_type: \"NORMAL_MONITORING\",\n    recommended_action: \"Continue normal shipment monitoring.\",\n    customer_communication_required: false\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        96
+      ],
+      "id": "4abaee88-1c93-4c06-8cb2-5e62767bce15",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/ai-analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"shipment_id\": \"{{ $('Webhook').item.json.body.shipment_id }}\",\n  \"origin\": \"{{ $('Webhook').item.json.body.origin }}\",\n  \"destination\": \"{{ $('Webhook').item.json.body.destination }}\",\n  \"carrier\": \"{{ $('Webhook').item.json.body.carrier }}\",\n  \"shipment_date\": \"{{ $('Webhook').item.json.body.shipment_date }}\",\n  \"expected_delivery\": \"{{ $('Webhook').item.json.body.expected_delivery }}\",\n  \"status\": \"{{ $('Webhook').item.json.body.status }}\",\n  \"priority\": \"{{ $('Webhook').item.json.body.priority }}\",\n  \"delay_hours\": \"{{ $('Webhook').item.json.body.delay_hours }}\",\n  \"reason\": \"{{ $('Webhook').item.json.body.reason }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -112
+      ],
+      "id": "402556a8-a136-439f-af51-ea77203ddedd",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
