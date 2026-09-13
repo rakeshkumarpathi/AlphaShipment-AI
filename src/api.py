@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from src.exception_detection import detect_exception
 from src.llm_analysis import analyze_shipment_with_ai
+from src.rag.retriever import retrieve_for_shipment
+from src.guardrails.rules import validate_ai_result
 
 
 app = FastAPI(
@@ -56,17 +58,51 @@ def ai_analyze_shipment(request: ShipmentRequest):
         return {
             "shipment_id": shipment_id,
             "exception_analysis": exception_result,
-            "ai_analysis": None
+            "retrieved_context": [],
+            "ai_analysis": None,
+            "guardrails": {
+                "passed": True,
+                "errors": []
+            }
         }
 
-     # Generative AI analysis
-    ai_result = analyze_shipment_with_ai(
+    # RAG retrieval
+    retrieved_context = retrieve_for_shipment(
         shipment_data,
         exception_result
     )
 
+    # Generative AI analysis
+    ai_result = analyze_shipment_with_ai(
+        shipment_data,
+        exception_result,
+        retrieved_context
+    )
+
+    # Business guardrails
+    guardrail_errors = validate_ai_result(
+        ai_result,
+        exception_result
+    )
+
+    if guardrail_errors:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "AI recommendation failed business guardrails.",
+                "errors": guardrail_errors,
+                "action_code": ai_result.action_code.value,
+                "severity": exception_result["severity"],
+            }
+        )
+
     return {
         "shipment_id": shipment_id,
         "exception_analysis": exception_result,
-        "ai_analysis": ai_result.model_dump()
+        "retrieved_context": retrieved_context,
+        "ai_analysis": ai_result.model_dump(),
+        "guardrails": {
+            "passed": True,
+            "errors": []
+        }
     }

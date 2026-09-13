@@ -4,3 +4,8 @@ pandas
 pydantic
 python-dotenv
 openai
+
+langchain
+langchain-openai
+langchain-text-splitters
+faiss-cpu
