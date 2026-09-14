@@ -1,0 +1,50 @@
+[
+  {
+    "query": "A critical shipment is delayed and requires immediate operational escalation.",
+    "relevant_sources": [
+      "operations_sop.md",
+      "escalation_policy.md"
+    ]
+  },
+  {
+    "query": "A shipment has a medium delivery delay. Operations should request a carrier update and continue monitoring.",
+    "relevant_sources": [
+      "operations_sop.md",
+      "escalation_policy.md"
+    ]
+  },
+  {
+    "query": "A shipment has a customs exception and customs clearance is pending. Operations need to verify documentation.",
+    "relevant_sources": [
+      "customs_procedure.md"
+    ]
+  },
+  {
+    "query": "A shipment is delayed and the recorded reason is a carrier delay. Historical carrier performance should be considered only as operational context.",
+    "relevant_sources": [
+      "carrier_policy.md",
+      "operations_sop.md"
+    ]
+  },
+  {
+    "query": "A shipment is delayed during a relevant weather disruption. Weather should be treated as contextual evidence.",
+    "relevant_sources": [
+      "weather_port_policy.md",
+      "operations_sop.md"
+    ]
+  },
+  {
+    "query": "A shipment is delayed because of port congestion. Operations should consider congestion together with the shipment status and delay reason.",
+    "relevant_sources": [
+      "weather_port_policy.md",
+      "operations_sop.md"
+    ]
+  },
+  {
+    "query": "A high-priority shipment has a delivery exception and requires increased monitoring and possible escalation.",
+    "relevant_sources": [
+      "operations_sop.md",
+      "escalation_policy.md"
+    ]
+  }
+]

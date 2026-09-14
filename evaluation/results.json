@@ -1,0 +1,112 @@
+{
+  "k": 4,
+  "number_of_queries": 7,
+  "mean_precision_at_k": 0.7142857142857143,
+  "mean_recall_at_k": 1.0,
+  "results": [
+    {
+      "query": "A critical shipment is delayed and requires immediate operational escalation.",
+      "relevant_sources": [
+        "escalation_policy.md",
+        "operations_sop.md"
+      ],
+      "retrieved_sources": [
+        "operations_sop.md",
+        "weather_port_policy.md",
+        "operations_sop.md",
+        "escalation_policy.md"
+      ],
+      "precision_at_k": 0.75,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A shipment has a medium delivery delay. Operations should request a carrier update and continue monitoring.",
+      "relevant_sources": [
+        "escalation_policy.md",
+        "operations_sop.md"
+      ],
+      "retrieved_sources": [
+        "operations_sop.md",
+        "weather_port_policy.md",
+        "operations_sop.md",
+        "escalation_policy.md"
+      ],
+      "precision_at_k": 0.75,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A shipment has a customs exception and customs clearance is pending. Operations need to verify documentation.",
+      "relevant_sources": [
+        "customs_procedure.md"
+      ],
+      "retrieved_sources": [
+        "customs_procedure.md",
+        "operations_sop.md",
+        "weather_port_policy.md",
+        "operations_sop.md"
+      ],
+      "precision_at_k": 0.25,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A shipment is delayed and the recorded reason is a carrier delay. Historical carrier performance should be considered only as operational context.",
+      "relevant_sources": [
+        "carrier_policy.md",
+        "operations_sop.md"
+      ],
+      "retrieved_sources": [
+        "carrier_policy.md",
+        "operations_sop.md",
+        "weather_port_policy.md",
+        "weather_port_policy.md"
+      ],
+      "precision_at_k": 0.5,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A shipment is delayed during a relevant weather disruption. Weather should be treated as contextual evidence.",
+      "relevant_sources": [
+        "operations_sop.md",
+        "weather_port_policy.md"
+      ],
+      "retrieved_sources": [
+        "weather_port_policy.md",
+        "weather_port_policy.md",
+        "operations_sop.md",
+        "operations_sop.md"
+      ],
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A shipment is delayed because of port congestion. Operations should consider congestion together with the shipment status and delay reason.",
+      "relevant_sources": [
+        "operations_sop.md",
+        "weather_port_policy.md"
+      ],
+      "retrieved_sources": [
+        "weather_port_policy.md",
+        "operations_sop.md",
+        "weather_port_policy.md",
+        "operations_sop.md"
+      ],
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0
+    },
+    {
+      "query": "A high-priority shipment has a delivery exception and requires increased monitoring and possible escalation.",
+      "relevant_sources": [
+        "escalation_policy.md",
+        "operations_sop.md"
+      ],
+      "retrieved_sources": [
+        "operations_sop.md",
+        "escalation_policy.md",
+        "operations_sop.md",
+        "weather_port_policy.md"
+      ],
+      "precision_at_k": 0.75,
+      "recall_at_k": 1.0
+    }
+  ]
+}

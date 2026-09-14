@@ -2,375 +2,323 @@
 
 ## AI-Powered Shipment Exception & Operations Automation Platform
 
-AlphaShipment AI is an AI-powered logistics operations platform designed to intelligently monitor, analyze, and automate shipment operations. The platform combines structured shipment data, data validation, deterministic business rules, carrier performance analytics, Generative AI, FastAPI REST services, and n8n workflow automation to create an end-to-end shipment exception intelligence and operations automation system.
+AlphaShipment AI is a logistics AI application that detects shipment exceptions, classifies severity, retrieves relevant operational policies, generates structured AI analysis, and automates operational actions.
 
-The platform is designed to identify abnormal shipment conditions, classify operational severity, analyze carrier-level performance, generate AI-assisted operational insights, and automatically route critical shipment exceptions toward appropriate escalation and communication workflows.
+The project combines **Python, Pandas, RAG, FAISS, LangChain, LangGraph, OpenAI, Pydantic, FastAPI, n8n, and Docker**.
 
----
+## What the Project Does
+
+The platform processes **1,500 shipment records**:
+
+```text
+Shipment Data
+     ↓
+Validation
+     ↓
+Exception Detection
+     ↓
+Severity Classification
+     ↓
+RAG Retrieval
+     ↓
+Generative AI Analysis
+     ↓
+Pydantic Structured Output
+     ↓
+Business Guardrails
+     ↓
+FastAPI
+     ↓
+n8n Automation
+```
+
+Normal shipments stop before the AI stage. Exception shipments continue through RAG and Generative AI analysis.
 
 ## Methodology
 
-The AlphaShipment AI methodology consists of six connected stages: data ingestion and validation, exception detection and severity classification, carrier performance analytics, Generative AI analysis, REST API service integration, and workflow automation.
+### 1. Data Validation
 
-![AlphaShipment AI Methodology](src/ARCHITECTURE/METHODOLOGY.png)
+Shipment records are validated before entering the intelligence pipeline. The dataset includes shipment IDs, origins, destinations, carriers, status, priority, delay information, transportation mode, cargo, weight, distance, weather, customs, port congestion, customer impact, and exception information.
 
-The methodology establishes a clear separation between deterministic operational logic, analytical processing, AI reasoning, API services, and workflow orchestration. This allows shipment decisions to remain explainable while using Generative AI for higher-level operational interpretation and recommendations.
+### 2. Exception Detection
 
-### 01. Data Ingestion & Validation
+A deterministic Python rule engine uses delay duration, priority, and shipment status to identify exceptions.
 
-The platform processes a structured dataset of **1,500 shipment records** representing realistic logistics operations. Shipment records contain operational information such as shipment identifiers, origins, destinations, carriers, shipment dates, delivery information, status, priority, delay duration, delay reasons, transportation modes, cargo types, shipment weight, distance, weather conditions, customs status, port congestion, carrier performance information, customer impact, and exception classifications.
-
-A validation layer checks required fields, data types, missing values, duplicate shipment identifiers, valid shipment statuses, valid priority values, numeric delay information, and overall dataset consistency before shipment records enter the operational intelligence pipeline.
-
-This stage establishes reliable and consistent input data for downstream analytics, exception detection, AI analysis, and automation.
-
-### 02. Exception Detection & Severity Classification
-
-The deterministic exception engine evaluates shipment conditions using defined operational business rules. It analyzes factors such as delay duration, shipment priority, shipment status, and exception conditions to identify abnormal shipments.
-
-Detected exceptions are classified according to operational severity:
+Severity levels:
 
 - **NORMAL**
 - **MEDIUM**
 - **HIGH**
 - **CRITICAL**
 
-The deterministic layer provides consistent and explainable exception decisions before AI analysis is applied. Critical shipment conditions can therefore be identified and prioritized systematically.
+The deterministic layer provides a consistent and explainable decision before Generative AI is used.
 
-### 03. Carrier Performance Analytics
+### 3. Carrier Analytics
 
-AlphaShipment AI evaluates shipment behavior at the carrier level to provide operational context for individual shipment exceptions.
+Carrier-level analytics provide operational context using total shipments, delayed shipments, exception counts, average delay, maximum delay, delay rate, and exception rate.
 
-Carrier analytics calculate metrics including total shipments, delayed shipments, exception counts, average delay hours, maximum delay hours, delay rate, and exception rate.
+Historical carrier performance is treated as context, not proof of the cause of an individual shipment exception.
 
-These measurements allow the platform to identify carriers with recurring operational issues and provide historical performance context when evaluating an individual delayed shipment.
+### 4. RAG Pipeline
 
-For example, a shipment experiencing a significant delay can be evaluated together with the historical delay rate and average delay duration of its carrier, enabling more context-aware operational analysis.
+The RAG pipeline provides operational knowledge to the AI.
 
-### 04. Generative AI Analysis
+Knowledge base documents:
 
-The Generative AI layer converts structured shipment information and operational context into actionable business insights.
+- Shipment operations SOP
+- Escalation policy
+- Customs procedures
+- Carrier policy
+- Weather and port disruption policy
 
-The AI analysis receives the complete shipment record retrieved from the dataset together with the deterministic exception result. It uses this operational context to generate structured operational intelligence.
+The pipeline uses:
 
-The AI produces four primary outputs:
+- Document ingestion
+- Text chunking with LangChain
+- OpenAI embeddings
+- FAISS vector search
+- Top-K retrieval
 
-**Business Impact** — explains the operational and customer implications of the shipment exception.
+### 5. LangGraph Workflow
 
-**Root Cause Analysis** — analyzes the recorded delay or exception reason together with relevant operational context.
+LangGraph orchestrates the workflow:
 
-**Recommended Action** — provides an actionable response for the operations team.
+```text
+START
+  ↓
+Validate
+  ↓
+Exception Detection
+  ↓
+Is Exception?
+  ├── No → END
+  └── Yes
+        ↓
+      RAG Retrieval
+        ↓
+      LLM Analysis
+        ↓
+      Guardrails
+        ↓
+       END
+```
 
-**Customer Communication Required** — determines whether proactive customer communication should be initiated.
+### 6. Generative AI
 
-The AI output follows a structured schema so that generated insights can be consumed reliably by APIs and downstream automation workflows.
+The AI receives shipment information, the deterministic exception result, and retrieved operational knowledge.
 
-### 05. REST API Service Layer
+It produces structured outputs containing:
 
-FastAPI provides the backend REST service layer connecting the Python shipment intelligence application with the n8n automation workflow.
+- Business impact
+- Root-cause analysis
+- Action code
+- Recommended action
+- Customer communication requirement
 
-The `POST /ai-analyze` endpoint receives only a `shipment_id`. FastAPI uses that ID to retrieve the complete shipment record from `data/shipments.csv`, validates the request with Pydantic, runs deterministic exception detection, and conditionally invokes Generative AI.
+### 7. Business Guardrails
 
-The API returns the shipment ID, deterministic exception analysis, and—only for exception shipments—the structured AI analysis.
+AI recommendations are checked against deterministic business rules.
 
-The REST architecture provides a standardized HTTP interface between the Python application and the n8n automation layer.
+```text
+NORMAL
+  → MONITOR
 
-### 06. Workflow Automation with n8n
+MEDIUM
+  → MONITOR
+  → REQUEST_CARRIER_UPDATE
 
-n8n acts as the workflow orchestration layer for the platform.
+HIGH
+  → ESCALATE_OPERATIONS
+  → REQUEST_CARRIER_UPDATE
+  → CONTACT_CUSTOMER
 
-A shipment ID enters the automation pipeline through an n8n Webhook. n8n sends the ID to the FastAPI `POST /ai-analyze` endpoint through an HTTP Request node. FastAPI retrieves the shipment record, performs deterministic exception detection, and uses the result as a gate for Generative AI.
+CRITICAL
+  → ESCALATE_CRITICAL
+  → CONTACT_CUSTOMER
+```
 
-Normal shipments (`exception = false`) do not trigger the OpenAI API and return no AI analysis. Exception shipments proceed to GPT-5-mini, receive the structured Pydantic AI response, and return the result to n8n.
+### 8. FastAPI
 
-n8n then evaluates the returned severity. Critical shipments follow the escalation path, where JavaScript formats the AI result and an email notification is sent. Normal shipments follow the non-escalation path.
+FastAPI exposes:
 
----
+```text
+POST /ai-analyze
+```
+
+Example request:
+
+```json
+{
+  "shipment_id": "SHP-1002"
+}
+```
+
+The API retrieves the shipment, runs the LangGraph workflow, and returns the deterministic analysis, retrieved context, structured AI analysis, and guardrail status.
+
+### 9. n8n Automation
+
+n8n provides workflow orchestration:
+
+```text
+Webhook
+   ↓
+HTTP Request
+   ↓
+FastAPI /ai-analyze
+   ↓
+Switch
+   ├── ESCALATE_CRITICAL
+   ├── ESCALATE_OPERATIONS
+   ├── CONTACT_CUSTOMER
+   ├── REQUEST_CARRIER_UPDATE
+   └── Normal Monitoring
+```
+
+Critical exceptions can trigger automated escalation emails.
+
+### 10. Docker
+
+The application is containerized using Docker. The image packages the FastAPI backend, LangGraph workflow, RAG components, FAISS index, knowledge base, and Python dependencies.
+
+The OpenAI API key is supplied at runtime through environment variables rather than stored in the image.
+
+## Architecture
+
+### Methodology
+
+![AlphaShipment AI Methodology](src/ARCHITECTURE/METHODOLOGY.png)
+
+### n8n Automation
+
+![AlphaShipment AI Automation](src/ARCHITECTURE/Automation.png)
 
 ## End-to-End Architecture
 
 ```text
                          Shipment ID
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │   n8n Webhook   │
-                    └────────┬────────┘
-                             │
-                             │ POST shipment_id
-                             ▼
-                    ┌─────────────────┐
-                    │     FastAPI     │
-                    │  /ai-analyze    │
-                    └────────┬────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │   CSV Lookup    │
-                    │ shipments.csv   │
-                    └────────┬────────┘
-                             │
-                             ▼
-                ┌──────────────────────────┐
-                │ Deterministic Exception  │
-                │ Detection & Severity     │
-                └────────────┬─────────────┘
-                             │
-                  ┌──────────┴──────────┐
-                  │                     │
-              exception=false       exception=true
-                  │                     │
-                  ▼                     ▼
-          ┌───────────────┐      ┌───────────────┐
-          │  No GPT Call  │      │  GPT-5-mini   │
-          │ ai_analysis   │      │   via OpenAI  │
-          │    = null     │      └───────┬───────┘
-          └───────┬───────┘              │
-                  │                      ▼
-                  │              ┌───────────────┐
-                  │              │    Pydantic   │
-                  │              │ Structured AI │
-                  │              │    Response   │
-                  │              └───────┬───────┘
-                  │                      │
-                  └──────────┬───────────┘
-                             ▼
-                    ┌─────────────────┐
-                    │      n8n IF     │
-                    │ Severity Check  │
-                    └────────┬────────┘
-                             │
-                    ┌────────┴────────┐
-                    │                 │
-               CRITICAL          Non-critical /
-                    │               Normal
-                    ▼                 │
-          ┌─────────────────┐         ▼
-          │ JavaScript      │   ┌──────────────┐
-          │ Format Result   │   │ Monitoring / │
-          └────────┬────────┘   │  No Email    │
-                   │            └──────────────┘
-                   ▼
-          ┌─────────────────┐
-          │ Automated Email │
-          │   Escalation    │
-          └─────────────────┘
+                              │
+                              ▼
+                       ┌──────────────┐
+                       │ n8n Webhook  │
+                       └──────┬───────┘
+                              │
+                              ▼
+                       ┌──────────────┐
+                       │   FastAPI    │
+                       │ /ai-analyze  │
+                       └──────┬───────┘
+                              │
+                              ▼
+                       ┌──────────────┐
+                       │ Data Lookup  │
+                       └──────┬───────┘
+                              │
+                              ▼
+                  ┌────────────────────────┐
+                  │ Exception Detection    │
+                  │ & Severity             │
+                  └───────────┬────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+                 Normal              Exception
+                    │                   │
+                    ▼                   ▼
+                   END            RAG Retrieval
+                                        │
+                                        ▼
+                                 Generative AI
+                                        │
+                                        ▼
+                                Pydantic Output
+                                        │
+                                        ▼
+                                  Guardrails
+                                        │
+                                        ▼
+                                      n8n
+                                        │
+                              ┌─────────┴─────────┐
+                              │                   │
+                         Critical            Other Actions
+                              │                   │
+                              ▼                   ▼
+                      Escalation Email      Workflow Action
 ```
 
-The workflow uses deterministic exception detection as the gate for Generative AI. This prevents normal shipments from triggering an OpenAI API call while allowing exception shipments to receive structured AI-assisted operational analysis and, when critical, automated escalation.
+## RAG Knowledge Base
 
----
+```text
+knowledge_base/
+├── operations_sop.md
+├── escalation_policy.md
+├── customs_procedure.md
+├── carrier_policy.md
+└── weather_port_policy.md
+```
 
-## Dataset
+## Evaluation
 
-The platform uses a **1,500-record structured shipment operations dataset** designed to represent diverse logistics scenarios.
+### Retrieval Evaluation
 
-The dataset covers shipment and operational attributes including:
+The RAG pipeline was evaluated across 7 test queries:
 
-- Shipment ID
-- Origin and destination
-- Carrier
-- Shipment date
-- Expected and actual delivery information
-- Shipment status
-- Priority
-- Delay hours
-- Delay reason
-- Transportation mode
-- Cargo type
-- Shipment weight
-- Distance
-- Weather conditions
-- Customs status
-- Port congestion
-- Carrier performance
-- Customer impact
-- Exception type
-- Severity
+```text
+Mean Precision@4: 71.43%
+Mean Recall@4:    100.00%
+```
 
-The dataset provides sufficient variation for shipment exception detection, carrier analytics, operational risk assessment, and AI-assisted decision support.
+The expected relevant knowledge sources were retrieved for all test queries, with some additional non-relevant chunks also returned.
 
----
+### AI Decision Evaluation
 
-## Exception Intelligence
+The workflow was evaluated across NORMAL, MEDIUM, HIGH, and CRITICAL cases:
 
-The deterministic exception engine provides explainable operational classification before Generative AI analysis.
+```text
+Shipments evaluated:          4
+Severity accuracy:        100.00%
+Action validity:          100.00%
+Guardrail pass rate:      100.00%
+Structured output validity: 100.00%
+```
 
-A critical exception can contain information such as:
+These results are from the current evaluation set and are not production-scale model accuracy.
+
+## Example Output
 
 ```json
 {
-  "exception": true,
-  "exception_type": "DELIVERY_DELAY",
-  "severity": "CRITICAL"
+  "shipment_id": "SHP-1002",
+  "exception_analysis": {
+    "exception": true,
+    "exception_type": "DELIVERY_DELAY",
+    "severity": "CRITICAL"
+  },
+  "ai_analysis": {
+    "action_code": "ESCALATE_CRITICAL",
+    "customer_communication_required": true
+  },
+  "guardrails": {
+    "passed": true,
+    "errors": []
+  }
 }
 ```
 
-This structured result becomes an input to the downstream AI and automation layers.
-
----
-
-## Carrier Analytics
-
-Carrier performance analysis provides operational measurements that support both direct reporting and AI-assisted reasoning.
-
-Example metrics include:
-
-```text
-Carrier       Delay Rate     Average Delay
--------------------------------------------
-Maersk          47.70%          19.25 hrs
-UPS             47.44%          23.17 hrs
-DHL             45.63%          18.47 hrs
-BlueDart        44.40%          18.89 hrs
-Carrier-X       44.12%          16.67 hrs
-FedEx           38.93%          18.47 hrs
-```
-
-These metrics allow the system to identify recurring carrier-level operational patterns and provide additional context when analyzing individual shipments.
-
----
-
-## Generative AI Output
-
-AlphaShipment AI uses structured Generative AI analysis to transform shipment and operational information into decision-support outputs.
-
-A typical analysis contains:
-
-```text
-Business Impact:
-High operational and customer impact caused by a significant shipment delay.
-
-Root Cause Analysis:
-The recorded operational reason and relevant carrier context indicate the
-primary factors contributing to the shipment exception.
-
-Recommended Action:
-Escalate the shipment to the operations team and request an updated
-recovery ETA from the carrier.
-
-Customer Communication:
-Required when the exception has material customer impact.
-```
-
-The structured response is represented through a predefined analysis schema:
-
-```text
-AIShipmentAnalysis
-│
-├── business_impact
-├── root_cause_analysis
-├── recommended_action
-└── customer_communication_required
-```
-
----
-
-## Example Shipment Automation Flow
-
-A shipment ID enters through n8n and is resolved against the shipment dataset. The deterministic exception engine then decides whether Generative AI is required.
-
-```text
-Shipment ID
-     ↓
-n8n Webhook
-     ↓
-FastAPI /ai-analyze
-     ↓
-CSV Shipment Lookup
-     ↓
-Deterministic Exception Detection
-     ↓
-      ┌───────────────────────┐
-      │   Exception detected?│
-      └───────────┬───────────┘
-             NO  │  YES
-                 │
-        ┌────────┴─────────┐
-        ▼                  ▼
-   No GPT Call         GPT-5-mini
-   ai_analysis=null        ↓
-        │             Pydantic
-        │          Structured Output
-        │                  │
-        └────────┬─────────┘
-                 ▼
-              n8n IF
-                 ↓
-        ┌────────┴────────┐
-        ▼                 ▼
-     CRITICAL        Normal / Other
-        ↓                 ↓
-   JavaScript        Monitoring
-   Formatting        / No Email
-        ↓
-  Automated Email
-    Escalation
-```
-
-This architecture separates deterministic operational decisions from Generative AI reasoning and prevents unnecessary AI calls for normal shipments.
-
----
-
-## Business Outcomes
-
-AlphaShipment AI is designed to reduce manual shipment monitoring, identify high-risk shipment exceptions faster, prioritize operational attention, provide consistent AI-assisted operational recommendations, identify recurring carrier performance issues, improve customer communication decisions, avoid unnecessary Generative AI calls for normal shipments, and automate repetitive escalation workflows.
-
-The platform demonstrates how deterministic business rules and Generative AI can work together: rules provide consistent and explainable exception classification, analytics provide operational context, AI provides higher-level reasoning and recommendations, FastAPI exposes the intelligence as services, and n8n converts the resulting decisions into automated business workflows.
-
----
-
 ## Technology Stack
 
-| Layer | Technologies |
+| Area | Technologies |
 |---|---|
 | Programming | Python, JavaScript |
 | Data Processing | Pandas, CSV, JSON |
-| Validation | Pandas, Pydantic |
-| Backend | FastAPI, REST APIs |
-| Generative AI | OpenAI API, GPT-5-mini, structured AI outputs, prompt engineering |
-| Automation | n8n, Webhooks, HTTP Request, IF routing, JavaScript, Email |
-| Data Format | CSV, JSON |
-| Configuration | Environment Variables, `.env` |
+| Validation | Pydantic |
+| AI / LLM | OpenAI API, GPT-5-mini |
+| RAG | LangChain, OpenAI Embeddings, FAISS |
+| Workflow | LangGraph |
+| Backend | FastAPI, REST API |
+| Automation | n8n, Webhooks, HTTP Request, Switch, JavaScript, Email |
+| Containerization | Docker |
 | Version Control | Git, GitHub |
-
----
-
-## Technical Concepts Demonstrated
-
-The project demonstrates practical implementation of:
-
-- End-to-end AI application architecture
-- Data ingestion and validation
-- Data quality checks
-- Deterministic business rules
-- Exception detection
-- Severity classification
-- Operational risk assessment
-- Carrier performance analytics
-- Delay-rate analysis
-- Exception-rate analysis
-- Generative AI integration
-- Prompt engineering
-- Structured LLM outputs
-- Root-cause analysis
-- AI-assisted recommendations
-- REST API development
-- FastAPI service architecture
-- Pydantic data models
-- JSON-based communication
-- Webhook-driven architecture
-- Conditional workflow routing
-- Conditional Generative AI invocation
-- AI cost-aware workflow design
-- Workflow orchestration
-- Automated escalation
-- Customer communication decision support
-- Modular Python development
-- Environment-based configuration
-- Git and GitHub version control
-
----
 
 ## Project Structure
 
@@ -380,61 +328,94 @@ AlphaShipment-AI/
 ├── data/
 │   └── shipments.csv
 │
+├── knowledge_base/
+│   ├── operations_sop.md
+│   ├── escalation_policy.md
+│   ├── customs_procedure.md
+│   ├── carrier_policy.md
+│   └── weather_port_policy.md
+│
 ├── src/
 │   ├── ARCHITECTURE/
-│   │   └── METHODOLOGY.png
-│   │
+│   │   ├── METHODOLOGY.png
+│   │   └── Automation.png
+│   ├── rag/
+│   │   ├── index.py
+│   │   └── retriever.py
+│   ├── workflow/
+│   │   └── graph.py
+│   ├── guardrails/
+│   │   └── rules.py
 │   ├── api.py
-│   ├── validation.py
+│   ├── ai_schema.py
 │   ├── exception_detection.py
 │   ├── carrier_analysis.py
-│   ├── ai_schema.py
 │   ├── llm_analysis.py
 │   ├── shipment_analysis.py
-│   ├── test_ai.py
-│   └── ...
+│   └── validation.py
 │
+├── evaluation/
+│   ├── retrieval_dataset.json
+│   ├── evaluate_retrieval.py
+│   ├── evaluate_ai_decisions.py
+│   └── results.json
+│
+├── Dockerfile
+├── .dockerignore
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
 
----
+## Running Locally
 
-## Project Architecture at a Glance
+Install dependencies:
 
-```text
-                     AlphaShipment AI
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-     Data Layer      Intelligence Layer   Automation
-          │                │                │
-          ▼                ▼                ▼
-   1,500 Shipments   Exception Detection    n8n
-   Validation        Severity Rules         Webhook
-   CSV Lookup        Carrier Analytics      HTTP Request
-                     Generative AI          IF Routing
-                     Pydantic Output        JavaScript
-                                            Email
-          │                │                │
-          └────────────────┼────────────────┘
-                           ▼
-                 Conditional AI Decision
-                           │
-              ┌────────────┴────────────┐
-              ▼                         ▼
-        Normal Shipment          Exception Shipment
-        No GPT Call              GPT-5-mini
-        No AI Analysis            Structured AI
-                                  Analysis
-                                      │
-                                      ▼
-                              Critical → Escalation
+```bash
+pip install -r requirements.txt
 ```
 
-## Outcome
+Build the FAISS index:
 
-AlphaShipment AI provides an intelligent and automated shipment exception management platform that combines reliable data processing, explainable operational rules, carrier analytics, Generative AI, REST APIs, and workflow automation to improve logistics operational efficiency, prioritize shipment risks, support faster decisions, automate escalation, and enhance customer communication.
+```bash
+python -m src.rag.index
+```
+
+Start FastAPI:
+
+```bash
+uvicorn src.api:app --reload
+```
+
+Open:
+
+```text
+http://localhost:8000/docs
+```
+
+## Running with Docker
+
+Build the image:
+
+```bash
+docker build -t alphashipment-ai .
+```
+
+Run the container:
+
+```bash
+docker run --rm -p 8000:8000 --env-file .env alphashipment-ai
+```
+
+Then open:
+
+```text
+http://localhost:8000/docs
+```
+
+## Project Goal
+
+AlphaShipment AI demonstrates how deterministic business rules, retrieval-augmented generation, structured LLM outputs, business guardrails, REST APIs, workflow orchestration, and automation can be combined into a practical AI operations application.
+
+The project uses Generative AI where it adds value while keeping critical operational decisions controlled by deterministic business rules.

@@ -1,0 +1,53 @@
+{
+  "shipments_evaluated": 4,
+  "severity_accuracy": 1.0,
+  "action_validity": 1.0,
+  "guardrail_pass_rate": 1.0,
+  "structured_output_validity": 1.0,
+  "results": [
+    {
+      "shipment_id": "SHP-1001",
+      "expected_severity": "NORMAL",
+      "actual_severity": "NORMAL",
+      "severity_match": true,
+      "action_code": null,
+      "action_valid_for_severity": true,
+      "guardrails_passed": true,
+      "guardrail_errors": [],
+      "structured_output_valid": true
+    },
+    {
+      "shipment_id": "SHP-1010",
+      "expected_severity": "MEDIUM",
+      "actual_severity": "MEDIUM",
+      "severity_match": true,
+      "action_code": "REQUEST_CARRIER_UPDATE",
+      "action_valid_for_severity": true,
+      "guardrails_passed": true,
+      "guardrail_errors": [],
+      "structured_output_valid": true
+    },
+    {
+      "shipment_id": "SHP-1003",
+      "expected_severity": "HIGH",
+      "actual_severity": "HIGH",
+      "severity_match": true,
+      "action_code": "ESCALATE_OPERATIONS",
+      "action_valid_for_severity": true,
+      "guardrails_passed": true,
+      "guardrail_errors": [],
+      "structured_output_valid": true
+    },
+    {
+      "shipment_id": "SHP-1002",
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "severity_match": true,
+      "action_code": "ESCALATE_CRITICAL",
+      "action_valid_for_severity": true,
+      "guardrails_passed": true,
+      "guardrail_errors": [],
+      "structured_output_valid": true
+    }
+  ]
+}
