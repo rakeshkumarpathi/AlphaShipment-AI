@@ -48,6 +48,9 @@ Shipment:
 - Priority: {shipment["priority"]}
 - Delay: {shipment["delay_hours"]} hours
 - Reason: {shipment.get("reason", "Not provided")}
+- Weather condition: {shipment.get("weather_condition", "Not provided")}
+- Customs status: {shipment.get("customs_status", "Not provided")}
+- Port congestion: {shipment.get("port_congestion", "Not provided")}
 
 Deterministic analysis:
 - Exception: {exception_result["exception"]}
@@ -89,20 +92,28 @@ Determine:
 
 Important rules:
 
-Important rules:
-
 - Never change the deterministic severity.
 - Do not invent shipment facts.
 - Do not treat general policy information as proof of
   the actual root cause.
+- Shipment fields such as weather condition, customs status,
+  and port congestion describe conditions present in the
+  shipment record.
+- Do not claim that these conditions are absent when they
+  are present in the record.
+- Do not treat the presence of a condition as proof that
+  it caused the shipment exception.
+- Prefer the recorded shipment reason when identifying the
+  likely root cause.
 - Prefer recorded shipment information over assumptions.
+- Retrieved policies provide operational guidance and
+  constraints; they do not establish shipment-specific facts.
 - Use retrieved policies to guide operational recommendations.
 - Recommended actions must be supported by the retrieved
   operational knowledge or the deterministic exception policy.
 - Do not introduce operational procedures or contingency
   actions that are not supported by the supplied evidence.
 - For CRITICAL shipments, action_code must be ESCALATE_CRITICAL.
-- For CRITICAL shipments, customer_communication_required must be true.
 """
 
     response = client.responses.parse(
