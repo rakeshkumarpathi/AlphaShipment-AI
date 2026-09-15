@@ -1,10 +1,17 @@
 from pathlib import Path
+from unittest import result
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from src.workflow.graph import workflow
+
+import logging
+from src.logging_config import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
@@ -32,11 +39,14 @@ def ai_analyze_shipment(request: ShipmentRequest):
 
     shipment_id = request.shipment_id
 
+    logger.info("Processing shipment %s", shipment_id)
+
     shipment = shipments_df[
         shipments_df["shipment_id"] == shipment_id
     ]
 
     if shipment.empty:
+        logger.warning("Shipment %s not found", shipment_id)
         raise HTTPException(
             status_code=404,
             detail=f"Shipment {shipment_id} not found"
@@ -57,6 +67,11 @@ def ai_analyze_shipment(request: ShipmentRequest):
         )
 
     except ValueError as error:
+        logger.error(
+            "Workflow validation failed for shipment %s: %s",
+            shipment_id,
+            error,
+        )
         raise HTTPException(
             status_code=422,
             detail=str(error)
@@ -83,8 +98,13 @@ def ai_analyze_shipment(request: ShipmentRequest):
     )
 
     if guardrail_errors:
+        logger.warning(
+        "Guardrail validation failed for shipment %s | severity=%s | errors=%s",
+        shipment_id,
+        deterministic["severity"],
+        guardrail_errors,
+    )
         ai_result = result.get("ai_result")
-
         raise HTTPException(
             status_code=422,
             detail={
@@ -98,6 +118,13 @@ def ai_analyze_shipment(request: ShipmentRequest):
                 "severity": deterministic["severity"],
             }
         )
+
+    logger.info(
+        "Shipment %s analyzed successfully | severity=%s | action=%s",
+        shipment_id,
+        deterministic["severity"],
+        result["ai_result"].action_code.value,
+    )
 
     ai_result = result["ai_result"]
 
