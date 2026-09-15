@@ -10,6 +10,18 @@ def test_workflow_exception_shipment(monkeypatch):
     # Select the first real exception shipment
     shipment = df[df["delay_hours"] > 0].iloc[0].to_dict()
 
+    def mock_retrieve_for_shipment(
+        shipment,
+        deterministic,
+    ):
+        return [
+            {
+                "source": "test_policy.md",
+                "content": "Test operational guidance.",
+                "distance": 0.0,
+            }
+        ]
+
     def mock_ai_analysis(
         shipment,
         exception_result,
@@ -31,6 +43,11 @@ def test_workflow_exception_shipment(monkeypatch):
             recommended_action="Test recommended action",
             customer_communication_required=False,
         )
+
+    monkeypatch.setattr(
+        "src.workflow.graph.retrieve_for_shipment",
+        mock_retrieve_for_shipment,
+    )
 
     monkeypatch.setattr(
         "src.workflow.graph.analyze_shipment_with_ai",
