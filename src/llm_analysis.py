@@ -8,19 +8,21 @@ from src.ai_schema import AIShipmentAnalysis
 
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY")
+def get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
 
-if not api_key:
-    raise ValueError("OPENAI_API_KEY is not configured.")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not configured.")
 
-client = OpenAI(api_key=api_key)
+    return OpenAI(api_key=api_key)
 
 
 def analyze_shipment_with_ai(
     shipment,
     exception_result,
-    retrieved_context
+    retrieved_context,
 ):
+    client = get_openai_client()
 
     context = "\n\n".join(
         f"""
